@@ -9,7 +9,7 @@ const config = {
   password: (process.env.CI ? process.env.MYSQL_PASSWORD : '') || '',
   database: process.env.MYSQL_DATABASE || 'test',
   compress: process.env.MYSQL_USE_COMPRESSION,
-  port: process.env.MYSQL_PORT || 3306
+  port: process.env.MYSQL_PORT || 3306,
 };
 
 if (process.env.MYSQL_USE_TLS) {
@@ -18,7 +18,7 @@ if (process.env.MYSQL_USE_TLS) {
     ca: fs.readFileSync(
       path.join(__dirname, '../examples/ssl/certs/ca.pem'),
       'utf-8'
-    )
+    ),
   };
 }
 
@@ -27,11 +27,11 @@ const configURI = `mysql://${config.user}:${config.password}@${config.host}:${co
 exports.SqlString = require('sqlstring');
 exports.config = config;
 
-exports.waitDatabaseReady = function(callback) {
+exports.waitDatabaseReady = function (callback) {
   const start = Date.now();
-  const tryConnect = function() {
+  const tryConnect = function () {
     const conn = exports.createConnection({ database: 'mysql' });
-    conn.once('error', err => {
+    conn.once('error', (err) => {
       if (err.code !== 'PROTOCOL_CONNECTION_LOST' && err.code !== 'ETIMEDOUT') {
         console.log('Unexpected error waiting for connection', err);
         process.exit(-1);
@@ -53,7 +53,13 @@ exports.waitDatabaseReady = function(callback) {
   tryConnect();
 };
 
-exports.createConnection = function(args) {
+exports.hrdiff = function (t1, t2) {
+  var s = t2[0] - t1[0];
+  var mms = t2[1] - t1[1];
+  return s * 1e9 + mms;
+};
+
+exports.createConnection = function (args) {
   if (!args) {
     args = {};
   }
@@ -86,7 +92,7 @@ exports.createConnection = function(args) {
   return conn;
 };
 
-exports.getConfig = function(input) {
+exports.getConfig = function (input) {
   const args = input || {};
   const params = {
     host: args.host || config.host,
@@ -105,12 +111,12 @@ exports.getConfig = function(input) {
     timezone: args && args.timezone,
     dateStrings: args && args.dateStrings,
     authSwitchHandler: args && args.authSwitchHandler,
-    typeCast: args && args.typeCast
+    typeCast: args && args.typeCast,
   };
   return params;
 };
 
-exports.createPool = function(args) {
+exports.createPool = function (args) {
   if (!args) {
     args = {};
   }
@@ -122,21 +128,21 @@ exports.createPool = function(args) {
   return driver.createPool(exports.getConfig(args));
 };
 
-exports.createPoolCluster = function(args = {}) {
+exports.createPoolCluster = function (args = {}) {
   let driver = require('../index.js');
   if (process.env.BENCHMARK_MYSQL1) {
     driver = require('mysql');
   }
-  return driver.createPoolCluster(args)
-}
+  return driver.createPoolCluster(args);
+};
 
-exports.createConnectionWithURI = function() {
+exports.createConnectionWithURI = function () {
   const driver = require('../index.js');
 
   return driver.createConnection({ uri: configURI });
 };
 
-exports.createTemplate = function() {
+exports.createTemplate = function () {
   const jade = require('jade');
   const template = require('fs').readFileSync(
     `${__dirname}/template.jade`,
@@ -148,9 +154,9 @@ exports.createTemplate = function() {
 const ClientFlags = require('../lib/constants/client.js');
 
 const portfinder = require('portfinder');
-exports.createServer = function(onListening, handler) {
+exports.createServer = function (onListening, handler) {
   const server = require('../index.js').createServer();
-  server.on('connection', conn => {
+  server.on('connection', (conn) => {
     conn.on('error', () => {
       // we are here when client drops connection
     });
@@ -163,7 +169,7 @@ exports.createServer = function(onListening, handler) {
       connectionId: 1234,
       statusFlags: 2,
       characterSet: 8,
-      capabilityFlags: flags
+      capabilityFlags: flags,
     });
     if (handler) {
       handler(conn);
@@ -175,6 +181,6 @@ exports.createServer = function(onListening, handler) {
   return server;
 };
 
-exports.useTestDb = function() {
+exports.useTestDb = function () {
   // no-op in my setup, need it for compatibility with node-mysql tests
 };
